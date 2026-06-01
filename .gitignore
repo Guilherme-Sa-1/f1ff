@@ -1,0 +1,17 @@
+# Frontend (Expo/React Native)
+node_modules/
+.expo/
+dist/
+npm-debug.log*
+
+# Backend (Python/FastAPI)
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# OS, Editor e Variáveis de Ambiente
+.DS_Store
+.vscode/
+.env
