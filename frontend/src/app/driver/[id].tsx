@@ -1,4 +1,3 @@
-// Arquivo: frontend/src/app/driver/[id].tsx
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -21,16 +20,14 @@ export default function DriverDetail() {
 
   return (
     <View style={styles.container}>
-      {/* Header com botão de voltar */}
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.backButton}>
           <Text style={styles.backText}>← Voltar</Text>
         </Pressable>
         <Text style={styles.title}>Detalhes</Text>
-        <View style={{ width: 60 }} /> {/* Espaçador para centralizar o título */}
+        <View style={{ width: 60 }} />
       </View>
 
-      {/* Cartão Principal do Piloto */}
       <View style={styles.mainCard}>
         <Text style={styles.driverNumber}>{driver.driverNumber}</Text>
         <View>
@@ -39,7 +36,6 @@ export default function DriverDetail() {
         </View>
       </View>
 
-      {/* Grid de Estatísticas */}
       <View style={styles.statsGrid}>
         <View style={styles.statBox}>
           <Text style={styles.statLabel}>Posição</Text>
@@ -55,7 +51,6 @@ export default function DriverDetail() {
         </View>
       </View>
 
-      {/* Tempos por Setor */}
       <Text style={styles.sectionTitle}>Tempos de Setor (Última Volta)</Text>
       <View style={styles.sectorContainer}>
         <View style={styles.sectorBox}>
