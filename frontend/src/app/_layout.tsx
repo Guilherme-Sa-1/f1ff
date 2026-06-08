@@ -1,15 +1,17 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
-import { useColorScheme } from 'react-native';
+// Arquivo: frontend/src/app/_layout.tsx
+import { Stack } from 'expo-router';
+import { StatusBar } from 'react-native';
+import { useTelemetryWebSocket } from '../hooks/useTelemetryWebSocket'; // <-- Adicione aqui
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
+export default function RootLayout() {
+  useTelemetryWebSocket(); 
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
-      <AppTabs />
-    </ThemeProvider>
+    <>
+      <StatusBar barStyle="light-content" backgroundColor="#0A0A0F" />
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(tabs)" />
+      </Stack>
+    </>
   );
 }

@@ -14,7 +14,7 @@ interface Props {
   teamColor: string;
 }
 
-export function DriverMarker({ driver, centerX, centerY, radiusX, radiusY, teamColor }: Props) {
+export const DriverMarker = React.memo(({ driver, centerX, centerY, radiusX, radiusY, teamColor }: Props) => {
   const progress = useSharedValue(driver.trackPercentage);
 
   useEffect(() => {
@@ -34,7 +34,7 @@ export function DriverMarker({ driver, centerX, centerY, radiusX, radiusY, teamC
       cx: centerX + radiusX * Math.cos(angle),
       cy: centerY + radiusY * Math.sin(angle),
     };
-  });
+  }, [centerX, centerY, radiusX, radiusY]);
 
   return (
     <AnimatedCircle
@@ -45,4 +45,6 @@ export function DriverMarker({ driver, centerX, centerY, radiusX, radiusY, teamC
       strokeWidth="1.5"
     />
   );
-}
+}, (prevProps, nextProps) => {
+  return prevProps.driver.trackPercentage === nextProps.driver.trackPercentage;
+});

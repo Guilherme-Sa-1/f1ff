@@ -1,12 +1,9 @@
-// Arquivo: frontend/src/app/(tabs)/live.tsx
 import { View, Text, StyleSheet, FlatList, Pressable } from 'react-native';
-import { Link } from 'expo-router'; // <-- Nova importação
-import { useTelemetryWebSocket } from '../../hooks/useTelemetryWebSocket';
+import { Link } from 'expo-router'; 
 import { useTelemetryStore } from '../../features/telemetry/telemetryStore';
 import { TrackMap } from '../../features/track-map/TrackMap';
 
 export default function LiveTiming() {
-  useTelemetryWebSocket();
   const { drivers, isConnected } = useTelemetryStore();
 
   return (
@@ -24,8 +21,13 @@ export default function LiveTiming() {
         data={drivers}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          // Usando Link com asChild para navegação perfeita na Web e Mobile
-          <Link href={`/driver/${item.id}`} asChild>
+          <Link 
+            href={{
+              pathname: '/driver/[id]',
+              params: { id: item.id }
+            }} 
+            asChild
+          >
             <Pressable 
               style={({ pressed }) => [
                 styles.driverCard,
