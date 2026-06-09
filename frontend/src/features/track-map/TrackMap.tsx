@@ -1,3 +1,4 @@
+// Arquivo: frontend/src/features/track-map/TrackMap.tsx
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, Text } from 'react-native';
 import Svg, { Polyline } from 'react-native-svg';
@@ -17,10 +18,11 @@ export function TrackMap() {
   const [trackPoints, setTrackPoints] = useState("");
 
   useEffect(() => {
+    // Busca a linha da pista de Interlagos do Backend
     fetch('http://localhost:8000/api/track')
       .then(res => res.json())
       .then(data => setTrackPoints(data.points))
-      .catch(err => console.log(err));
+      .catch(err => console.log('Erro ao baixar o desenho da pista:', err));
   }, []);
 
   const mapWidth = 340;
@@ -28,11 +30,11 @@ export function TrackMap() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Interlagos (Autódromo José Carlos Pace)</Text>
+      <Text style={styles.title}>Interlagos (Ao Vivo)</Text>
       <View style={styles.mapContainer}>
         <Svg width={mapWidth} height={mapHeight}>
           
-          {/* Desenha a pista */}
+          {/* Desenha a pista real em SVG */}
           {trackPoints ? (
             <Polyline
               points={trackPoints}

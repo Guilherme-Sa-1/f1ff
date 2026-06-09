@@ -1,3 +1,4 @@
+// Arquivo: frontend/src/types/telemetry.ts
 export interface DriverState {
   id: string;
   driverNumber: number;
@@ -18,4 +19,9 @@ export interface DriverState {
   inPit: boolean;
   x: number;
   y: number; 
+}
+
+export interface TelemetryUpdate {
+  event: string;
+  data: DriverState[];
 }
