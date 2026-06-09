@@ -16,9 +16,6 @@ export interface DriverState {
   tyreAge: number;
   pitStops: number;
   inPit: boolean;
-}
-
-export interface TelemetryUpdate {
-  event: string;
-  data: DriverState[];
+  x: number;
+  y: number; 
 }

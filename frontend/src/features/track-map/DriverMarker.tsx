@@ -1,40 +1,28 @@
-import React, { useEffect } from 'react';
+// Arquivo: frontend/src/features/track-map/DriverMarker.tsx
+import React from 'react';
 import { Circle } from 'react-native-svg';
-import Animated, { useAnimatedProps, useSharedValue, withTiming, Easing } from 'react-native-reanimated';
+import Animated, { useAnimatedProps, withTiming, Easing } from 'react-native-reanimated';
 import { DriverState } from '../../types/telemetry';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 interface Props {
   driver: DriverState;
-  centerX: number;
-  centerY: number;
-  radiusX: number;
-  radiusY: number;
   teamColor: string;
 }
 
-export const DriverMarker = React.memo(({ driver, centerX, centerY, radiusX, radiusY, teamColor }: Props) => {
-  const progress = useSharedValue(driver.trackPercentage);
-
-  useEffect(() => {
-    if (Math.abs(progress.value - driver.trackPercentage) > 50) {
-      progress.value = driver.trackPercentage;
-    } else {
-      progress.value = withTiming(driver.trackPercentage, { 
-        duration: 250, 
-        easing: Easing.linear 
-      });
-    }
-  }, [driver.trackPercentage]);
-
+export function DriverMarker({ driver, teamColor }: Props) {
+  // O hook useAnimatedProps reage automaticamente às mudanças que chegam do WebSocket
+  // e joga a interpolação direto para a placa de vídeo (60 FPS)
   const animatedProps = useAnimatedProps(() => {
-    const angle = (progress.value / 100) * 2 * Math.PI - (Math.PI / 2);
     return {
-      cx: centerX + radiusX * Math.cos(angle),
-      cy: centerY + radiusY * Math.sin(angle),
+      cx: withTiming(driver.x || 0, { duration: 250, easing: Easing.linear }),
+      cy: withTiming(driver.y || 0, { duration: 250, easing: Easing.linear }),
     };
-  }, [centerX, centerY, radiusX, radiusY]);
+  }, [driver.x, driver.y]);
+
+  // Se a coordenada da pista ainda não chegou do backend, esconde a bolinha
+  if (!driver.x || !driver.y) return null;
 
   return (
     <AnimatedCircle
@@ -45,6 +33,4 @@ export const DriverMarker = React.memo(({ driver, centerX, centerY, radiusX, rad
       strokeWidth="1.5"
     />
   );
-}, (prevProps, nextProps) => {
-  return prevProps.driver.trackPercentage === nextProps.driver.trackPercentage;
-});
+}
