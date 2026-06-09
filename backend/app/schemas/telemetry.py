@@ -18,3 +18,5 @@ class DriverState(BaseModel):
     tyreAge: int
     pitStops: int
     inPit: bool
+    x: float
+    y: float

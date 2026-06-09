@@ -21,5 +21,7 @@ class F1Normalizer:
             tyreCompound=raw_data.get("tyreCompound", ""),
             tyreAge=raw_data.get("tyreAge", 0),
             pitStops=raw_data.get("pitStops", 0),
-            inPit=raw_data.get("inPit", False)
+            inPit=raw_data.get("inPit", False),
+            x=raw_data.get("x", 0.0),
+            y=raw_data.get("y", 0.0)
         )

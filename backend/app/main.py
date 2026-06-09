@@ -39,6 +39,10 @@ app.add_middleware(
 async def root():
     return {"status": "online", "message": "Backend operando em Clean Architecture com Redis"}
 
+@app.get("/api/track")
+async def get_track_shape():
+    return {"points": f1_service.track_points_str}
+
 @app.websocket("/ws/race")
 async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
