@@ -17,7 +17,6 @@ export function TrackMap() {
   const [trackPoints, setTrackPoints] = useState("");
 
   useEffect(() => {
-    // Pede o formato da pista gerado pela telemetria do backend
     fetch('http://localhost:8000/api/track')
       .then(res => res.json())
       .then(data => setTrackPoints(data.points))
@@ -33,7 +32,7 @@ export function TrackMap() {
       <View style={styles.mapContainer}>
         <Svg width={mapWidth} height={mapHeight}>
           
-          {/* Desenha o traçado real da pista em SVG */}
+          {/* Desenha a pista */}
           {trackPoints ? (
             <Polyline
               points={trackPoints}
