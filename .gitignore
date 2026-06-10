@@ -10,8 +10,10 @@ __pycache__/
 *.py[cod]
 *$py.class
 .pytest_cache/
+f1_cache
 
 # OS, Editor e Variáveis de Ambiente
 .DS_Store
 .vscode/
 .env
+
