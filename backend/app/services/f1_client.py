@@ -66,7 +66,7 @@ class F1LiveClient:
 
                 for drv in active_drivers:
                     # Velocidade base + Fator Aleatório (Simula acelerações e ultrapassagens)
-                    speed_boost = random.uniform(0.4, 0.9) 
+                    speed_boost = random.uniform(1.5, 3.0) 
                     drv["trackPercentage"] += speed_boost
 
                     # Se passou de 100%, cruzou a linha de chegada (nova volta)
