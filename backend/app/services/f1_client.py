@@ -18,7 +18,7 @@ class F1LiveClient:
         self.track_points_str = ""
 
     async def start_stream(self):
-        print("⏳ Baixando telemetria real do GP do Brasil (Pode levar uns 20s na 1ª vez)...")
+        print("⏳ Baixando telemetria real do GP do Brasil...")
         try:
             session = fastf1.get_session(2023, 'Brazil', 'R')
             session.load(telemetry=True, weather=False)
@@ -46,36 +46,45 @@ class F1LiveClient:
 
             top_drivers = session.results.head(5)
             active_drivers = []
+            
+            # Posiciona os carros na linha de largada em fila indiana
             for i, (_, row) in enumerate(top_drivers.iterrows()):
                 active_drivers.append({
                     "id": row['Abbreviation'],
                     "driverNumber": int(row['DriverNumber']),
                     "name": row['FullName'],
                     "team": row['TeamName'],
-                    "speed": 8.5 - (i * 0.1),
-                    "offset": i * 15
+                    "trackPercentage": 0 - (i * 1.5), # Espaçamento na largada
+                    "lap": 1
                 })
 
-            print("✅ Pista de Interlagos carregada! Iniciando transmissão contínua...")
+            print("✅ Pista carregada! Iniciando simulação contínua com ultrapassagens...")
             self.is_connected = True
-            lap = 1
 
             while True:
                 normalized_data = []
-                current_time = time.time()
 
                 for drv in active_drivers:
-                    track_pct = (current_time * drv["speed"] + drv["offset"]) % 100
+                    # Velocidade base + Fator Aleatório (Simula acelerações e ultrapassagens)
+                    speed_boost = random.uniform(0.4, 0.9) 
+                    drv["trackPercentage"] += speed_boost
+
+                    # Se passou de 100%, cruzou a linha de chegada (nova volta)
+                    if drv["trackPercentage"] >= 100:
+                        drv["trackPercentage"] = drv["trackPercentage"] % 100
+                        drv["lap"] += 1
+
+                    # Impede que a porcentagem negativa da largada quebre o mapa
+                    safe_pct = drv["trackPercentage"] if drv["trackPercentage"] >= 0 else 0
                     
-                    wp_index = int((track_pct / 100.0) * (len(self.waypoints) - 1))
+                    # Pega a coordenada exata X e Y na pista
+                    wp_index = int((safe_pct / 100.0) * (len(self.waypoints) - 1))
                     car_x = self.waypoints[wp_index]['x']
                     car_y = self.waypoints[wp_index]['y']
 
                     clean_data = F1Normalizer.parse_driver_state({
                         **drv,
                         "position": 0,
-                        "lap": lap,
-                        "trackPercentage": round(track_pct, 2),
                         "x": round(car_x, 2),
                         "y": round(car_y, 2),
                         "gapToLeader": "",
@@ -91,25 +100,31 @@ class F1LiveClient:
                     })
                     normalized_data.append(clean_data.model_dump())
 
-                normalized_data.sort(key=lambda x: x["trackPercentage"], reverse=True)
-                leader_pct = normalized_data[0]["trackPercentage"]
+                # Ordena primeiro quem tem mais voltas, e depois quem está mais à frente na pista
+                normalized_data.sort(key=lambda x: (x["lap"], x["trackPercentage"]), reverse=True)
+                
+                leader = normalized_data[0]
 
                 for idx, item in enumerate(normalized_data):
                     item["position"] = idx + 1
                     if idx == 0:
                         item["gapToLeader"] = "LÍDER"
                     else:
-                        gap_pct = leader_pct - item["trackPercentage"]
-                        if gap_pct < 0: gap_pct += 100
-                        item["gapToLeader"] = f"+{(gap_pct * 0.75):.3f}s"
+                        # Calcula a distância correta considerando voltas e porcentagem
+                        lap_diff = leader["lap"] - item["lap"]
+                        pct_diff = leader["trackPercentage"] - item["trackPercentage"]
+                        total_diff = (lap_diff * 100) + pct_diff
+                        item["gapToLeader"] = f"+{(total_diff * 0.75):.3f}s"
 
-                # AVISO VISUAL NO SEU TERMINAL:
-                print(f"📡 [Ao Vivo] Atualizando mapa... Líder em X: {normalized_data[0]['x']}")
+                # Log dinâmico: Veja as coordenadas mudando sem parar agora!
+                print(f"📡 [Ao Vivo] P1: {leader['id']} (Volta {leader['lap']}) | X: {leader['x']} | Y: {leader['y']}")
 
                 await redis_repo.save_telemetry(normalized_data)
+                
+                # Atualiza 4 vezes por segundo
                 await asyncio.sleep(0.25)
 
         except Exception as e:
-            print(f"❌ Erro fatal no FastF1: {e}")
+            print(f"❌ Erro fatal na simulação: {e}")
 
 f1_service = F1LiveClient()

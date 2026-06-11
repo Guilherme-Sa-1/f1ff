@@ -22,17 +22,25 @@ class ConnectionManager:
             self.active_connections.remove(websocket)
 
     async def listen_to_redis(self):
-        await self.pubsub.subscribe("f1:telemetry:stream")
-        
-        async for message in self.pubsub.listen():
-            if message["type"] == "message":
-                data = json.loads(message["data"])
-                payload = {"event": "telemetry_update", "data": data}
-                
-                for connection in list(self.active_connections):
-                    try:
-                        await connection.send_json(payload)
-                    except Exception:
-                        self.disconnect(connection)
+        print("[Redis] Starting listener thread...")
+        while True:
+            try:
+                await self.pubsub.subscribe("f1:telemetry:stream")
+                print("[Redis] Subscribed to f1:telemetry:stream successfully.")
+                async for message in self.pubsub.listen():
+                    if message and message["type"] == "message":
+                        data = json.loads(message["data"])
+                        payload = {"event": "telemetry_update", "data": data}
+                        
+                        print(f"[Telemetry] Broadcast via WS to {len(self.active_connections)} clients")
+                        
+                        for connection in list(self.active_connections):
+                            try:
+                                await connection.send_json(payload)
+                            except Exception:
+                                self.disconnect(connection)
+            except Exception as e:
+                print(f"[Redis] Listener error. Reconnecting in 2s: {e}")
+                await asyncio.sleep(2)
 
 manager = ConnectionManager()

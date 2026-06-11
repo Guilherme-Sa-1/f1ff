@@ -1,22 +1,29 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useTelemetryStore } from '../features/telemetry/telemetryStore';
 import { TelemetryUpdate } from '../types/telemetry';
-
-const WS_URL = 'ws://localhost:8000/ws/race'; 
+import { WS_URL } from '../config/api';
 
 export const useTelemetryWebSocket = () => {
   const { setDrivers, setConnected } = useTelemetryStore();
+  const wsRef = useRef<WebSocket | null>(null);
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const backoffRef = useRef(2000); // Inicia com 2s
 
   useEffect(() => {
-    let ws: WebSocket | null = null;
-    let reconnectTimer: ReturnType<typeof setTimeout>;
-
     const connect = () => {
-      ws = new WebSocket(WS_URL);
+      // Evita múltiplas conexões simultâneas
+      if (wsRef.current?.readyState === WebSocket.OPEN || wsRef.current?.readyState === WebSocket.CONNECTING) {
+        return;
+      }
+
+      console.log(`[WebSocket] Connecting to ${WS_URL}...`);
+      const ws = new WebSocket(WS_URL);
+      wsRef.current = ws;
 
       ws.onopen = () => {
-        console.log('🏁 Conectado ao WebSocket da F1');
+        console.log('[WebSocket] Connected');
         setConnected(true);
+        backoffRef.current = 2000; // Reseta o backoff após sucesso
       };
 
       ws.onmessage = (event) => {
@@ -26,26 +33,42 @@ export const useTelemetryWebSocket = () => {
             setDrivers(message.data);
           }
         } catch (error) {
-          console.error('Erro ao processar pacote:', error);
+          console.error('[WebSocket] Error parsing message:', error);
         }
       };
 
       ws.onclose = () => {
-        console.log('🔴 Desconectado. Reconectando em 2s...');
+        console.log('[WebSocket] Disconnected');
         setConnected(false);
-        reconnectTimer = setTimeout(connect, 2000);
+        scheduleReconnect();
       };
 
-      ws.onerror = () => {
-        ws?.close();
+      ws.onerror = (error) => {
+        console.error('[WebSocket] Error encountered');
+        ws.close(); // Força o onclose para iniciar a reconexão
       };
     };
 
+    const scheduleReconnect = () => {
+      if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
+      
+      console.log(`[WebSocket] Reconnecting in ${backoffRef.current / 1000}s...`);
+      reconnectTimeoutRef.current = setTimeout(() => {
+        backoffRef.current = Math.min(backoffRef.current * 2, 30000); // Exponential backoff (max 30s)
+        connect();
+      }, backoffRef.current);
+    };
+
+    // Inicia a primeira conexão
     connect();
 
+    // Cleanup imaculado ao desmontar o app (evita memory leaks)
     return () => {
-      clearTimeout(reconnectTimer);
-      ws?.close();
+      if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
+      if (wsRef.current) {
+        wsRef.current.onclose = null; // Previne loop de reconexão na desmontagem
+        wsRef.current.close();
+      }
     };
-  }, []); 
+  }, []);
 };
