@@ -3,6 +3,7 @@ node_modules/
 .expo/
 dist/
 npm-debug.log*
+assets
 
 # Backend (Python/FastAPI)
 venv/
